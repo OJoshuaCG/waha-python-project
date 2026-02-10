@@ -11,30 +11,12 @@
 
 ## ✨ Características Principales
 
-- 🔐 **Gestión de Sesiones**: Control total sobre el ciclo de vida de tus sesiones de WhatsApp (Inicio, Parada, Estado).
-- 📸 **Autenticación QR**: Obtención de códigos QR en formato pairing-string o imagen Base64 de forma instantánea.
-- 💬 **Mensajería Avanzada**: Envío de mensajes de texto, respuestas (quoted messages) y gestión de chats.
+- 🔐 **Gestión de Sesiones**: Control total sobre el ciclo de vida de tus sesiones de WhatsApp (Iniciando sesiones nuevas con un solo comando).
+- 📸 **Autenticación QR**: Obtención de códigos QR en formato pairing-string o imagen Base64 para escaneo rápido.
+- 💬 **Mensajería Avanzada**: Envío de mensajes de texto, respuestas (quoted messages) y gestión de chats individuales o grupales.
 - 📂 **Manejo de Archivos**: Envío de imágenes, documentos y multimedia mediante rutas locales, URLs o subida directa.
-- 👥 **Gestión de Grupos**: Creación de grupos y envío de mensajes masivos a comunidades.
-- 🏥 **Health Checks**: Monitoreo en tiempo real de la conexión con el servidor WAHA.
-- 🛠️ **Arquitectura Limpia**: Separación clara entre controladores, rutas y esquemas.
-
----
-
-## 🛠️ Requisitos Previos
-
-Antes de comenzar, asegúrate de tener:
-
-1.  **Python 3.10+** instalado.
-2.  **WAHA Server** funcionando. Puedes levantarlo rápidamente con Docker:
-    ```bash
-    docker run -it -p 3000:3000 devlikepro/waha
-    ```
-3.  **uv** (El gestor de paquetes de Python ultra rápido):
-    ```powershell
-    # Windows (PowerShell)
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-    ```
+- 🏥 **Health Checks Integrados**: Monitoreo automático de la salud de los servicios y del motor de WhatsApp.
+- 🐋 **Docker First**: Orquestación lista para desplegar en cualquier entorno con un solo comando.
 
 ---
 
@@ -44,41 +26,39 @@ La forma más rápida y robusta de iniciar el ecosistema completo (Backend + WAH
 
 ### 1. Iniciar Servicios
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 Esto levantará:
-- **WAHA Server**: En el puerto `3000`.
-- **WhatsPlay Backend**: En el puerto `8000`.
+- **WAHA Server**: El motor de WhatsApp en el puerto `3000`.
+- **WhatsPlay Backend**: La API FastAPI en el puerto `8000`.
 
 ### 2. Verificar Salud
-El backend esperará automáticamente a que el servidor WAHA esté saludable antes de iniciar.
-- Backend: `curl http://localhost:8000/health`
-- WAHA: `curl http://localhost:3000/ping`
+El backend esperará automáticamente a que el servidor WAHA esté saludable antes de permitir peticiones críticas.
+- Backend: `http://localhost:8000/health`
+- WAHA: `http://localhost:3000/ping`
 
 ---
 
 ## 🛠️ Instalación y Configuración Manual
-```bash
-git clone <tu-repositorio>
-cd waha_project/backend
-```
 
-### 2. Sincronizar Dependencias con `uv`
+Si prefieres ejecutarlo sin Docker (solo el backend):
+
+### 1. Preparar Entorno
 ```bash
 uv sync
 ```
 
-### 3. Configurar el Entorno
-Crea un archivo `.env` basado en el ejemplo proporcionado:
+### 2. Configurar Seguridad
+Crea un archivo `.env` basado en el `.env.example`. Asegúrate de que la `WAHA_API_KEY` coincida con la configurada en tu servidor WAHA.
 ```env
 WAHA_URL=http://localhost:3000
+WAHA_API_KEY=tu_clave_secreta_aqui
 APP_PORT=8000
 APP_DEBUG=true
 ```
 
-### 4. Iniciar el Servidor
+### 3. Iniciar el Servidor
 ```bash
-# Modo desarrollo con auto-reload
 uv run python -m app.main
 ```
 
@@ -86,7 +66,7 @@ uv run python -m app.main
 
 ## 📖 Documentación de la API
 
-Una vez que el servidor esté corriendo, puedes explorar y probar la API interactivamente:
+Explora y prueba la API interactivamente con la documentación generada automáticamente:
 
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs) (Recomendado)
 - **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
@@ -96,6 +76,7 @@ Una vez que el servidor esté corriendo, puedes explorar y probar la API interac
 ## 🧪 Guía de Uso Rápido (Quick Start)
 
 ### Paso 1: Iniciar una Sesión
+Este paso crea e inicia la sesión en WAHA.
 ```bash
 curl -X POST "http://localhost:8000/api/v1/sessions" \
      -H "Content-Type: application/json" \
@@ -103,7 +84,7 @@ curl -X POST "http://localhost:8000/api/v1/sessions" \
 ```
 
 ### Paso 2: Escanear el QR
-Puedes obtener la imagen directamente para escanearla:
+Obtén la imagen Base64 para escanearla con tu teléfono:
 `GET http://localhost:8000/api/v1/sessions/mi_session/qr/image`
 
 ### Paso 3: Enviar un Mensaje
@@ -129,22 +110,20 @@ async def send_hello():
 ```text
 backend/
 ├── app/
-│   ├── controllers/    # Lógica de negocio avanzada
-│   ├── routes/         # Definición de endpoints API
-│   ├── models/         # Modelos de base de datos (si aplica)
-│   ├── schemas/        # Validaciones Pydantic (Input/Output)
-│   ├── utils/          # Cliente WAHA y herramientas auxiliares
-│   └── main.py         # Punto de entrada de la aplicación
-├── tests/              # Suite de pruebas automatizadas
-├── .env.example        # Plantilla de variables de entorno
-└── pyproject.toml      # Configuración de dependencias (uv)
+│   ├── controllers/    # Lógica de negocio avanzada y orquestación
+│   ├── routes/         # Definición de endpoints API estructurados
+│   ├── schemas/        # Modelos Pydantic (Validación de tipos)
+│   ├── utils/          # Cliente WAHA premium e inyección de dependencias
+│   └── main.py         # Punto de entrada FastAPI
+├── Dockerfile          # Imagen optimizada multi-stage con uv
+├── docker-compose.yml  # Orquestación de backend y motor WAHA
+└── pyproject.toml      # Gestión de dependencias moderna (uv)
 ```
 
 ---
 
-## 🛡️ Licencia
-
-Distribuido bajo la Licencia MIT. Consulta `LICENSE` para más información.
+## 🛡️ Notas de Seguridad
+El proyecto utiliza un header `X-Api-Key` para la comunicación interna entre el backend y WAHA. Por defecto, en el `docker-compose.yml` se utiliza una clave de ejemplo; asegúrate de cambiarla en entornos de producción tanto en el contenedor WAHA como en el Backend.
 
 ---
-<p align="center">Hecho con ❤️ para la automatización de WhatsApp</p>
+<p align="center">Hecho con ❤️ para la automatización profesional de WhatsApp</p>
