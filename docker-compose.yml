@@ -1,0 +1,48 @@
+
+services:
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - WAHA_LOG_LEVEL=info
+      - WHATSAPP_DEFAULT_ENGINE=WEBJS
+      - WAHA_API_KEY=plataforma_waha_secret_key
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waha-fastapi-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - WAHA_URL=http://waha:3000
+      - WAHA_API_KEY=plataforma_waha_secret_key
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - APP_DEBUG=true
+      - UPLOAD_DIR=/app/uploads
+      - LOG_LEVEL=INFO
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      waha:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  uploads_data:

@@ -7,6 +7,8 @@ and the Waha client.
 
 from typing import Generator
 
+from fastapi import Depends
+
 from app.controllers.file_controller import FileController
 from app.controllers.group_controller import GroupController
 from app.controllers.message_controller import MessageController

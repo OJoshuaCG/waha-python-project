@@ -177,7 +177,7 @@ class WahaClient:
             "Accept": "application/json",
         }
         if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+            headers["X-Api-Key"] = self.api_key
         return headers
 
     async def _get_client(self) -> httpx.AsyncClient:
@@ -271,7 +271,7 @@ class WahaClient:
                 "config": config or {},
             }
             response = await client.post(
-                f"{self.base_url}/api/sessions/start",
+                f"{self.base_url}/api/sessions",
                 json=payload,
             )
             response.raise_for_status()
@@ -295,7 +295,7 @@ class WahaClient:
         try:
             client = await self._get_client()
             response = await client.post(
-                f"{self.base_url}/api/sessions/stop/{session_name}",
+                f"{self.base_url}/api/sessions/{session_name}/stop",
             )
             response.raise_for_status()
             logger.info(f"Session '{session_name}' stopped successfully")

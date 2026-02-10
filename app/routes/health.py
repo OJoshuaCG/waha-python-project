@@ -6,9 +6,10 @@ This module defines API endpoints for health checks and monitoring.
 
 from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.schemas.whatsapp import HealthResponse
+from app.utils.dependencies import get_waha_client
 from app.utils.logger import logger
 from app.utils.waha_client import WahaClient
 
@@ -24,7 +25,7 @@ router = APIRouter(
     summary="Health check",
     description="Checks the health status of the API and Waha connection.",
 )
-async def health_check(waha_client: WahaClient) -> HealthResponse:
+async def health_check(waha_client: WahaClient = Depends(get_waha_client)) -> HealthResponse:
     """
     Check the health of the API and Waha connection.
 
@@ -62,7 +63,7 @@ async def liveness() -> dict:
     summary="Readiness probe",
     description="Checks if the service is ready to accept traffic.",
 )
-async def readiness(waha_client: WahaClient) -> dict:
+async def readiness(waha_client: WahaClient = Depends(get_waha_client)) -> dict:
     """
     Readiness check.
 
